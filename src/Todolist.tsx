@@ -1,11 +1,12 @@
 import React, {ChangeEvent} from 'react';
-import {FilterValuesType} from './App';
+
 import {AddItemForm} from './AddItemForm';
 import {EditableSpan} from './EditableSpan';
 
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 import {Button, Checkbox, IconButton} from "@mui/material";
+import {FilterValuesType} from "./AppWithReducers";
 
 
 
