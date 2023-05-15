@@ -1,13 +1,10 @@
-import React, {ChangeEvent} from 'react';
-
+import React, {ChangeEvent, memo, useCallback, useMemo} from 'react';
 import {AddItemForm} from './AddItemForm';
 import {EditableSpan} from './EditableSpan';
-
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-
 import {Button, Checkbox, IconButton} from "@mui/material";
 import {FilterValuesType} from "./AppWithReducers";
-
+import {Task} from "./Task";
 
 
 export type TaskType = {
@@ -30,24 +27,43 @@ type PropsType = {
     changeTaskTitle: (taskId: string, newTitle: string, todolistId: string) => void
 }
 
-export function Todolist(props: PropsType) {
-    const addTask = (title: string) => {
+export const Todolist = memo((props: PropsType) => {
+    const addTask = useCallback((title: string) => {
         props.addTask(title, props.id);
-    }
-
+    }, [])
     const removeTodolist = () => {
         props.removeTodolist(props.id);
     }
-    const changeTodolistTitle = (title: string) => {
+    const changeTodolistTitle = useCallback((title: string) => {
         props.changeTodolistTitle(props.id, title);
-    }
+    },[ props.changeTodolistTitle,props.id])
+    const onAllClickHandler = useCallback(() => props.changeFilter("all", props.id),[props.changeFilter,props.id]);
+    const onActiveClickHandler = useCallback(() => props.changeFilter("active", props.id),[props.changeFilter,props.id]);
+    const onCompletedClickHandler = useCallback(() => props.changeFilter("completed", props.id),[props.changeFilter,props.id]);
+    let tasks = props.tasks;
 
-    const onAllClickHandler = () => props.changeFilter("all", props.id);
-    const onActiveClickHandler = () => props.changeFilter("active", props.id);
-    const onCompletedClickHandler = () => props.changeFilter("completed", props.id);
+    useMemo(()=>{
+        if (props.filter === "active") {
+            tasks = tasks.filter(t => t.isDone === false);
+        }
+        if (props.filter === "completed") {
+            tasks = tasks.filter(t => t.isDone === true);
+        }
+        return tasks
+    },[props.filter])
+
+    const removeTask = (taskId:string) => props.removeTask(taskId,props.id)
+    const changeTaskStatus = (taskId:string,isDone:boolean) => {
+        props.changeTaskStatus(taskId, isDone,props.id);
+    }
+    const changeTaskTitle = useCallback((taskId:string,newValue:string) => {
+        props.changeTaskTitle(taskId, newValue,props.id);
+    },[props.changeTaskTitle,props.id])
+
+
 
     return <div>
-        <h3> <EditableSpan value={props.title} onChange={changeTodolistTitle} />
+        <h3><EditableSpan value={props.title} onChange={changeTodolistTitle}/>
             <IconButton onClick={removeTodolist}>
                 <DeleteForeverIcon/>
             </IconButton>
@@ -55,48 +71,44 @@ export function Todolist(props: PropsType) {
         <AddItemForm addItem={addTask}/>
         <div>
             {
-                props.tasks.map(t => {
-                    const onClickHandler = () => props.removeTask(t.id, props.id)
-                    const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
-                        let newIsDoneValue = e.currentTarget.checked;
-                        props.changeTaskStatus(t.id, newIsDoneValue, props.id);
-                    }
-                    const onTitleChangeHandler = (newValue: string) => {
-                        props.changeTaskTitle(t.id, newValue, props.id);
-                    }
-
-
-                    return <div key={t.id} className={t.isDone ? "is-done" : ""}>
-                        <Checkbox
-                            checked={t.isDone}
-                            color="primary"
-                            onChange={onChangeHandler}
-                        />
-
-                        <EditableSpan value={t.title} onChange={onTitleChangeHandler} />
-                        <IconButton onClick={onClickHandler}>
-                            <DeleteForeverIcon/>
-                        </IconButton>
-                    </div>
-                })
+                tasks.map(t => <Task
+                    task={t}
+                    key={t.id}
+                    changeTaskTitle={changeTaskTitle}
+                    changeTaskStatus={changeTaskStatus}
+                    removeTask={removeTask}
+                />)
             }
         </div>
         <div>
-            <Button variant={props.filter === 'all' ? 'outlined' : 'text'}
-                    onClick={onAllClickHandler}
-                    color={'inherit'}
-            >All
-            </Button>
-            <Button variant={props.filter === 'active' ? 'outlined' : 'text'}
-                    onClick={onActiveClickHandler}
-                    color={'primary'}>Active
-            </Button>
-            <Button variant={props.filter === 'completed' ? 'outlined' : 'text'}
-                    onClick={onCompletedClickHandler}
-                    color={'secondary'}>Completed
-            </Button>
+            <ButtonWithMemo
+                title={"All"}
+                onClick={onAllClickHandler}
+                variant={props.filter === 'all' ? 'outlined' : 'text'}
+                color={'secondary'}/>
+            <ButtonWithMemo
+                title={"Active"}
+                onClick={onActiveClickHandler}
+                variant={props.filter === 'active' ? 'outlined' : 'text'}
+                color={'secondary'}/>
+           <ButtonWithMemo
+               title={"Completed"}
+               onClick={onCompletedClickHandler}
+               variant={props.filter === 'completed' ? 'outlined' : 'text'}
+               color={'secondary'}/>
         </div>
     </div>
+})
+export type ButtonWithMemoPropsType={
+    title:string
+    onClick:()=>void
+    variant:'text' | 'outlined' | 'contained'
+    color:'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning'
 }
-
+const ButtonWithMemo=memo((props:ButtonWithMemoPropsType)=>{
+    return <Button variant={props.variant}
+                   onClick={props.onClick}
+                   color={'secondary'}>{props.title}
+    </Button>
+})
 
