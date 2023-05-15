@@ -5,6 +5,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {Button, Checkbox, IconButton} from "@mui/material";
 import {FilterValuesType} from "./AppWithReducers";
 import {Task} from "./Task";
+import {TaskWithRedux} from "./TaskWhithRedux";
 
 
 export type TaskType = {
@@ -36,30 +37,28 @@ export const Todolist = memo((props: PropsType) => {
     }
     const changeTodolistTitle = useCallback((title: string) => {
         props.changeTodolistTitle(props.id, title);
-    },[ props.changeTodolistTitle,props.id])
-    const onAllClickHandler = useCallback(() => props.changeFilter("all", props.id),[props.changeFilter,props.id]);
-    const onActiveClickHandler = useCallback(() => props.changeFilter("active", props.id),[props.changeFilter,props.id]);
-    const onCompletedClickHandler = useCallback(() => props.changeFilter("completed", props.id),[props.changeFilter,props.id]);
+    }, [props.changeTodolistTitle, props.id])
+    const onAllClickHandler = useCallback(() => props.changeFilter("all", props.id), [props.changeFilter, props.id]);
+    const onActiveClickHandler = useCallback(() => props.changeFilter("active", props.id), [props.changeFilter, props.id]);
+    const onCompletedClickHandler = useCallback(() => props.changeFilter("completed", props.id), [props.changeFilter, props.id]);
+
     let tasks = props.tasks;
 
-    useMemo(()=>{
-        if (props.filter === "active") {
-            tasks = tasks.filter(t => t.isDone === false);
-        }
-        if (props.filter === "completed") {
-            tasks = tasks.filter(t => t.isDone === true);
-        }
-        return tasks
-    },[props.filter])
-
-    const removeTask = (taskId:string) => props.removeTask(taskId,props.id)
-    const changeTaskStatus = (taskId:string,isDone:boolean) => {
-        props.changeTaskStatus(taskId, isDone,props.id);
+    if (props.filter === "active") {
+        tasks = tasks.filter(t => t.isDone === false);
     }
-    const changeTaskTitle = useCallback((taskId:string,newValue:string) => {
-        props.changeTaskTitle(taskId, newValue,props.id);
-    },[props.changeTaskTitle,props.id])
+    if (props.filter === "completed") {
+        tasks = tasks.filter(t => t.isDone === true);
+    }
 
+
+    const removeTask = (taskId: string) => props.removeTask(taskId, props.id)
+    const changeTaskStatus = (taskId: string, isDone: boolean) => {
+        props.changeTaskStatus(taskId, isDone, props.id);
+    }
+    const changeTaskTitle = useCallback((taskId: string, newValue: string) => {
+        props.changeTaskTitle(taskId, newValue, props.id);
+    }, [props.changeTaskTitle, props.id])
 
 
     return <div>
@@ -71,12 +70,7 @@ export const Todolist = memo((props: PropsType) => {
         <AddItemForm addItem={addTask}/>
         <div>
             {
-                tasks.map(t => <Task
-                    task={t}
-                    key={t.id}
-                    changeTaskTitle={changeTaskTitle}
-                    changeTaskStatus={changeTaskStatus}
-                    removeTask={removeTask}
+                tasks.map(t => <TaskWithRedux key={t.id} taskId={t.id} todolistId={props.id}
                 />)
             }
         </div>
@@ -91,21 +85,21 @@ export const Todolist = memo((props: PropsType) => {
                 onClick={onActiveClickHandler}
                 variant={props.filter === 'active' ? 'outlined' : 'text'}
                 color={'secondary'}/>
-           <ButtonWithMemo
-               title={"Completed"}
-               onClick={onCompletedClickHandler}
-               variant={props.filter === 'completed' ? 'outlined' : 'text'}
-               color={'secondary'}/>
+            <ButtonWithMemo
+                title={"Completed"}
+                onClick={onCompletedClickHandler}
+                variant={props.filter === 'completed' ? 'outlined' : 'text'}
+                color={'secondary'}/>
         </div>
     </div>
 })
-export type ButtonWithMemoPropsType={
-    title:string
-    onClick:()=>void
-    variant:'text' | 'outlined' | 'contained'
-    color:'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning'
+export type ButtonWithMemoPropsType = {
+    title: string
+    onClick: () => void
+    variant: 'text' | 'outlined' | 'contained'
+    color: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning'
 }
-const ButtonWithMemo=memo((props:ButtonWithMemoPropsType)=>{
+const ButtonWithMemo = memo((props: ButtonWithMemoPropsType) => {
     return <Button variant={props.variant}
                    onClick={props.onClick}
                    color={'secondary'}>{props.title}
